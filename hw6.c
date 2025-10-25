@@ -49,7 +49,7 @@ float shiny = 64.0f;
 int orbitalSmooth = 1;     
 
 // Texture variables
-unsigned int texture[13];  
+unsigned int texture[15];  
 int mode = 0;
 float stadiumTextureOffset = 0.0f;  
 
@@ -442,15 +442,31 @@ void drawStadiumField(float length, float width) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, grass);
     
-    // Stadium field surface (grass)
-    glColor3f(0.2f, 0.8f, 0.2f);
+    // Enable texture for football field
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, texture[13]);
+    
+    // Set texture wrapping to repeat in both directions
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    // Stadium field surface with football field texture
+    glColor3f(1.0f, 1.0f, 1.0f); 
     glBegin(GL_QUADS);
-    glNormal3f(0.0f, 1.0f, 0.0f);  
-    glVertex3f(-length/2.0f, -0.01f,-width/2.0f);
-    glVertex3f(length/2.0f,-0.01f,-width/2.0f);
-    glVertex3f(length/2.0f, -0.01f,width/2.0f);
-    glVertex3f(-length/2.0f, -0.01f,width/2.0f);
-    glEnd(); 
+    glNormal3f(0.0f, 1.0f, 0.0f);
+    
+    // Calculate texture repetition based on field size
+    float textureRepeatX = length / 2.0f;
+    float textureRepeatZ = width / 2.0f;  
+    
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-length/2.0f, -0.01f, -width/2.0f);
+    glTexCoord2f(textureRepeatX, 0.0f); glVertex3f(length/2.0f, -0.01f, -width/2.0f);
+    glTexCoord2f(textureRepeatX, textureRepeatZ); glVertex3f(length/2.0f, -0.01f, width/2.0f);
+    glTexCoord2f(0.0f, textureRepeatZ); glVertex3f(-length/2.0f, -0.01f, width/2.0f);
+    glEnd();
+    
+    glDisable(GL_TEXTURE_2D);
     
     glPopMatrix();
     drawSoccerFieldMarkings(length, width);
@@ -467,6 +483,15 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
     glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR, white);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,black);
     
+    // Enable texture for stadium tier
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, texture[14]);
+    
+    // Set texture wrapping to repeat in both directions
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
     float tierThickness=0.2f; 
     
     for (int row =0;row<rows;row++) 
@@ -478,32 +503,48 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, tierGray);
         
         // Top surface of tier
+        glColor3f(1.0f, 1.0f, 1.0f); 
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, tierGray);
         glBegin(GL_QUAD_STRIP);
         for (int i = 0;i <= segments;i++) {
             float angle = 2.0f *PI*i / segments;
             float x1= centerX+ currentMajorRadius* cos(angle);
-            float z1 = centerZ +currentMinorRadius * sin(angle);
+            float z1 =centerZ +currentMinorRadius * sin(angle);
             float x2 = centerX +(currentMajorRadius- 0.3f) * cos(angle);
-            float z2 = centerZ+ (currentMinorRadius - 0.3f) *sin(angle);
+            float z2=centerZ+ (currentMinorRadius-0.3f) *sin(angle);
             
-            glNormal3f(0.0f, 1.0f, 0.0f);  
-            glVertex3f(x1, currentHeight, z1);
-            glNormal3f(0.0f, 1.0f, 0.0f);  
-            glVertex3f(x2, currentHeight, z2);
+            
+            float u =(float)i /(float)segments * 4.0f; 
+            float v1 = 0.0f;
+            float v2 = 1.0f;
+            
+            glNormal3f(0.0f,1.0f,0.0f);
+            glTexCoord2f(u, v1);
+            glVertex3f(x1, currentHeight,z1);
+            glNormal3f(0.0f, 1.0f, 0.0f);
+            glTexCoord2f(u, v2);
+            glVertex3f(x2, currentHeight,z2);
         }
         glEnd();
         
+        // Bottom surface of tier
         glBegin(GL_QUAD_STRIP);
         for (int i = 0;i <=segments;i++) {
             float angle =2.0f* PI * i / segments;
             float x1= centerX+ currentMajorRadius* cos(angle);
             float z1 =centerZ +currentMinorRadius * sin(angle);
             float x2=centerX +(currentMajorRadius- 0.3f) * cos(angle);
-            float z2 = centerZ+ (currentMinorRadius - 0.3f) *sin(angle);
+            float z2 = centerZ+ (currentMinorRadius -0.3f) *sin(angle);
+            float u = (float)i/(float)segments * 4.0f; 
+            float v1 = 0.0f;
+            float v2 = 1.0f;
+            
             // Calculate normals for tier surface (horizontal)
-            glNormal3f(0.0f, -1.0f,0.0f);  
+            glNormal3f(0.0f, -1.0f,0.0f);
+            glTexCoord2f(u, v1);
             glVertex3f(x1,currentHeight-tierThickness, z1);
-            glNormal3f(0.0f, -1.0f, 0.0f);  
+            glNormal3f(0.0f, -1.0f, 0.0f);
+            glTexCoord2f(u, v2);
             glVertex3f(x2, currentHeight-tierThickness,z2);
         }
         glEnd();
@@ -519,12 +560,19 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
             // Normalize the normal vector
             float length = sqrt(nx*nx+ nz*nz);
             if (length > 0) {
-                nx /= length;
-                nz /= length;
+                nx /=length;
+                nz/= length;
             }
+
+            float u = (float)i / (float)segments * 4.0f; 
+            float v1 = 0.0f;
+            float v2 = 1.0f;
+            
             glNormal3f(nx, 0.0f, nz);
-            glVertex3f(x, currentHeight - tierThickness, z);
+            glTexCoord2f(u, v1);
+            glVertex3f(x,currentHeight -tierThickness, z);
             glNormal3f(nx, 0.0f, nz);
+            glTexCoord2f(u, v2);
             glVertex3f(x, currentHeight, z);
         }
         glEnd();
@@ -539,28 +587,40 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
             float nx= cos(angle)/(currentMajorRadius - 0.3f);
             float nz = sin(angle)/(currentMinorRadius - 0.3f);
             // Normalize the normal vector
-            float length = sqrt(nx* nx + nz * nz);
+            float length = sqrt(nx* nx +nz * nz);
             if (length > 0) 
             {
                 nx /= length;
                 nz /= length;
             }
+            
+            // Calculate texture coordinates for inner edge
+            float u =(float)i/(float)segments * 4.0f; 
+            float v1 = 0.0f;
+            float v2 = 1.0f;
+            
             glNormal3f(-nx, 0.0f, -nz);
-            glVertex3f(x,currentHeight- tierThickness, z);
+            glTexCoord2f(u, v1);
+            glVertex3f(x,currentHeight-tierThickness, z);
             glNormal3f(-nx, 0.0f, -nz);
+            glTexCoord2f(u, v2);
             glVertex3f(x, currentHeight,z);
         }
         glEnd();
 
         // Vertical wall behind tier 
-        glColor3f(0.5f, 0.5f, 0.5f);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, wallGray);
+        glColor3f(1.0f,1.0f,1.0f); 
+        glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE, wallGray);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texture[14]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // Outer surface of wall
         glBegin(GL_QUAD_STRIP);
         for (int i = 0; i<=segments; i++) {
-            float angle = 2.0f *PI * i / segments;
-            float x = centerX +(currentMajorRadius - 0.3f) * cos(angle);
+            float angle =2.0f *PI * i/segments;
+            float x = centerX +(currentMajorRadius- 0.3f) * cos(angle);
             float z = centerZ + (currentMinorRadius - 0.3f)* sin(angle);
             
             // Calculate normals 
@@ -574,9 +634,16 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
                 nz /=length;
             }
             
+            // Calculate texture coordinates for vertical wall
+            float u = (float)i / (float)segments * 4.0f; 
+            float v1= 0.0f;
+            float v2 =2.0f; 
+            
             glNormal3f(nx,0.0f,nz);
+            glTexCoord2f(u, v1);
             glVertex3f(x,currentHeight,z);
             glNormal3f(nx, 0.0f, nz);
+            glTexCoord2f(u, v2);
             glVertex3f(x, currentHeight + 0.4f, z);
         }
         glEnd();
@@ -585,8 +652,8 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
         glBegin(GL_QUAD_STRIP);
         for (int i = 0; i<=segments; i++) {
             float angle = 2.0f *PI * i / segments;
-            float x = centerX +(currentMajorRadius - 0.3f - tierThickness) * cos(angle);
-            float z= centerZ + (currentMinorRadius - 0.3f - tierThickness)* sin(angle);
+            float x = centerX +(currentMajorRadius - 0.3f -tierThickness) * cos(angle);
+            float z= centerZ + (currentMinorRadius -0.3f- tierThickness)* sin(angle);
             
             // Calculate normals 
             float nx =cos(angle)/(currentMajorRadius- 0.3f);
@@ -599,9 +666,17 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
                 nx /= length;
                 nz /= length;
             }
+            
+            // Calculate texture coordinates for inner wall surface
+            float u = (float)i/(float)segments *4.0f; 
+            float v1 = 0.0f;
+            float v2 = 2.0f;
+            
             glNormal3f(-nx, 0.0f, -nz);
+            glTexCoord2f(u, v1);
             glVertex3f(x,currentHeight, z);
             glNormal3f(-nx, 0.0f, -nz);
+            glTexCoord2f(u, v2);
             glVertex3f(x, currentHeight + 0.4f, z);
         }
         glEnd();
@@ -611,11 +686,17 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
         for (int i = 0; i<=segments; i++) {
             float angle = 2.0f *PI * i / segments;
             float xOuter = centerX +(currentMajorRadius - 0.3f) * cos(angle);
-            float zOuter = centerZ + (currentMinorRadius - 0.3f)* sin(angle);
-            float xInner = centerX +(currentMajorRadius - 0.3f -tierThickness) * cos(angle);
-            float zInner = centerZ + (currentMinorRadius - 0.3f- tierThickness)* sin(angle); 
-            glNormal3f(0.0f, 1.0f, 0.0f);  
+            float zOuter =centerZ + (currentMinorRadius - 0.3f)* sin(angle);
+            float xInner= centerX +(currentMajorRadius - 0.3f -tierThickness) * cos(angle);
+            float zInner =centerZ +(currentMinorRadius- 0.3f- tierThickness)* sin(angle);
+            float u1 = (float)i / (float)segments * 4.0f; 
+            float u2 = (float)i / (float)segments * 4.0f;
+            float v = 1.0f;
+            
+            glNormal3f(0.0f,1.0f, 0.0f);
+            glTexCoord2f(u1,v);
             glVertex3f(xOuter,currentHeight+0.4f, zOuter);
+            glTexCoord2f(u2, v);
             glVertex3f(xInner, currentHeight+0.4f,zInner);
         }
         glEnd();
@@ -628,13 +709,21 @@ void drawStadiumTier(float centerX, float centerZ, float majorRadius, float mino
             float zOuter = centerZ + (currentMinorRadius - 0.3f)* sin(angle);
             float xInner=centerX +(currentMajorRadius - 0.3f - tierThickness) * cos(angle);
             float zInner=centerZ + (currentMinorRadius- 0.3f - tierThickness)* sin(angle);
-            glNormal3f(0.0f, -1.0f, 0.0f);  
+            
+            float u1 = (float)i /(float)segments * 4.0f; 
+            float u2 = (float)i / (float)segments*4.0f;
+            float v = 0.0f;
+            
+            glNormal3f(0.0f,-1.0f, 0.0f);
+            glTexCoord2f(u1, v);
             glVertex3f(xOuter,currentHeight,zOuter);
+            glTexCoord2f(u2, v);
             glVertex3f(xInner,currentHeight,zInner);
         }
         glEnd();
     }
     
+    glDisable(GL_TEXTURE_2D);
     glPopMatrix();
 }
 
@@ -751,14 +840,14 @@ void drawPalmTree(void) {
 
         // Calculate normals 
         float nx = x1 / radius;
-        float nz = z1 / radius;
+        float nz = z1 /radius;
         
         
-        float u = (float)i / 16.0f * 20.0f;
+        float u = (float)i /16.0f*20.0f;
         glTexCoord2f(u, 0.0f);
         glNormal3f(nx, 0.0f, nz);
         glVertex3f(x1, 0.0f, z1);
-        glTexCoord2f(u, 14.0f * (treeTrunkHeight / 4.0f));  // Scale texture with height
+        glTexCoord2f(u, 14.0f * (treeTrunkHeight / 4.0f));  
         glNormal3f(nx, 0.0f, nz);
         glVertex3f(x2, treeTrunkHeight, z2);
     }
@@ -767,7 +856,7 @@ void drawPalmTree(void) {
     
     // Leaves with leaf texture
     glEnable(GL_TEXTURE_2D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE);
     glBindTexture(GL_TEXTURE_2D, texture[7]);
     glColor3f(0.2f, 0.8f, 0.2f);
     glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,green);
@@ -1059,9 +1148,9 @@ void drawOlympicCauldron(float x, float y, float z) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, darkGray);
     glBegin(GL_QUAD_STRIP);
     for (int i = 0; i <= 32; i++) {
-        float angle = 2.0f * PI * i / 32;
-        float radius = 1.5f;
-        float x1= x + radius * cos(angle);
+        float angle =2.0f * PI * i / 32;
+        float radius=1.5f;
+        float x1= x + radius*cos(angle);
         float z1 = z +radius* sin(angle);
         float x2 =x + (radius -0.3f) *cos(angle);
         float z2 = z + (radius- 0.3f) * sin(angle);
@@ -4927,6 +5016,8 @@ int main(int argc, char** argv) {
     texture[10] = LoadTexBMP("Swimming_Top.bmp");
     texture[11] = LoadTexBMP("HandRail.bmp");
     texture[12] = LoadTexBMP("Cauldron_Texture_1.bmp");
+    texture[13] = LoadTexBMP("football_field.bmp");
+    texture[14] = LoadTexBMP("Stadium.bmp");
     
     init();
     glutDisplayFunc(display);

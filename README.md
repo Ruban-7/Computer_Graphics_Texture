@@ -97,3 +97,14 @@ make
 
 ## Completion Time
 **Approximate time to complete**: 15 hours
+
+
+## Comments:
+* Field should be textured
+* Stadium seats should be textured
+* Texture dimensions should be: Square, a Power of 2, less than or equal to 512! Please use "GNU Image Manipulation Program" (or your favored software) to correct this issue.
+
+## Updates:
+I did all the changes in my code.
+
+
